@@ -55,7 +55,7 @@ def rest():
     d = random.randint(2,5)
     health += 1
     passDays(d)
-    print('Your health has increased by 1!')
+    print('Your health has increased by 1!\n')
 
 def hunt():
     d = random.randint(2,5)
