@@ -1,8 +1,4 @@
-from abc import ABC, abstractmethod
-import os
-
-clear = lambda: os.system('cls')
-
+import random
 pokemonDictionary = {
     'grass' : {
         'attacks' : {
@@ -106,82 +102,71 @@ class Pokemon():
     health = None
     attackPower = None
     weakAgainst = None
+    isDead = False
 
     def __init__(this,pokemonElement,pokemonType):
-        if pokemonDictionary[pokemonElement] == None:
+        try:
+            pokemonDictionary[pokemonElement]
+        except KeyError:
             raise ValueError('Pokemon element is invalid')
-        if pokemonDictionary[pokemonElement]['type'][pokemonType] == None:
-            raise ValueError('Pokemon type is invalid') 
+        try:
+            pokemonDictionary[pokemonElement]['types'][pokemonType]
+        except KeyError:
+            raise ValueError('Pokemon type is invalid')
+            
         this.pElement = pokemonElement
         this.pType = pokemonType
-        maxHealth = pokemonDictionary[pokemonElement]['types'][pokemonType]['HP']
-        health = maxHealth
-        attackPower = pokemonDictionary[pokemonElement]['types'][pokemonType]['AP']
-        weakAgainst = pokemonDictionary[pokemonElement]['weak against']
-        super().__init__
+        this.maxHealth = pokemonDictionary[pokemonElement]['types'][pokemonType]['HP']
+        this.health = this.maxHealth
+        this.attackPower = pokemonDictionary[pokemonElement]['types'][pokemonType]['AP']
+        this.weakAgainst = pokemonDictionary[pokemonElement]['weak against']
 
-    
-    def attack(this, pokemon1, damage):
-        pokemon1.takeDamage(damage, this.pType)
+    def attack(this, opponent, attack):
+        try:
+            pokemonDictionary[this.pElement]['attacks'][attack]
+        except KeyError:
+            raise ValueError('Invalid attack for this Pokemon')
+        
+        attackUsed = pokemonDictionary[this.pElement]['attacks'][attack]
+
+        if random.randint(0,100) < attackUsed['accuracy']:
+            if this.attackPower > attackUsed['power']:
+                opponent.takeDamage(attackUsed['power'], this.pType)
+            else:
+                opponent.takeDamage(this.attackPower, this.pType)
+            return True
+        else:
+            return False
     
     def heal(this):
         this.health += 20
+        if this.maxHealth < this.health:
+            this.health = this.maxHealth
 
-    
     def takeDamage(this, damage, aType):
-        if this.weakAgainst == aType:
-            this.health -= damage * 1.5
-        else:
-            this.health -= damage
-        
-        if this.health 
-    
-    
-    def setType(this, pokemonType,):
-        if pokemonDictionary['water']['type'][pokemonType] == None:
-            raise ValueError('Pokemon type is invalid') 
-        this.pType = pokemonType
+            if this.weakAgainst == aType:
+                this.health -= damage * 1.5
+            else:
+                this.health -= damage
+            
+            if this.health <= 0:
+                this.isDead = True
 
-    
-    def setAttack():
-        pass
-
-    
-    def getAttacks():
-        pass
-
-class GrassPokemon(Pokemon):
-    global grassDictionary
-    
-    def __init__():
-        super().__init__
-
-    def setType(this,pokemonType):
-        if pokemonDictionary['grass']['type'][pokemonType] == None:
-            raise ValueError('Pokemon type is invalid') 
-        this.pType = pokemonType
-
-class FirePokemon(Pokemon):
-    global fireDictionary
-
-    def __init__():
-        super().__init__
-
-    def setType(this,pokemonType):
-        if pokemonDictionary['fire']['type'][pokemonType] == None:
-            raise ValueError('Pokemon type is invalid') 
-        this.pType = pokemonType
-
-class WaterPokemon(Pokemon):
-    global pokemonDictionary
-
-    def __init__():
-        super().__init__
-
-    def setType(this,pokemonType):
-        if pokemonDictionary['water']['type'][pokemonType] == None:
-            raise ValueError('Pokemon type is invalid') 
-        this.pType = pokemonType
+    def getElement(this):
+        return this.pElement
 
     def getType(this):
         return this.pType
+
+    def getIsDead(this):
+        return this.isDead
+
+    def getHealth(this):
+        return this.health
+    
+    def getAttacks(this):
+        return pokemonDictionary[this.pElement]['attacks']
+
+    @staticmethod
+    def getPokemonDict():
+        return pokemonDictionary
