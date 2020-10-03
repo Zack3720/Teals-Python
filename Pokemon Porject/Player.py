@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from PokemonTypes import Pokemon
-from consolemenu.items import *
 from consolemenu import *
+from consolemenu.items import *
 import os
 
 clear = lambda: os.system('cls')
@@ -34,7 +34,7 @@ class Player(ABC):
     def switch(this):
         pass
 
-class CompPlayer(Player):
+#class CompPlayer(Player):
 
 
 class UserPlayer(Player):
@@ -60,6 +60,9 @@ class UserPlayer(Player):
 
     def askPokemon(this, pokemonAmount):
         global menu 
+
+        # Makes a nested dictionary 'pDict' that list all pokemon types
+        # And adds their elements to their dictionary.
         pDict = {}
         eList = list(Pokemon.getPokemonDict().keys())
         for element in eList:
@@ -78,13 +81,22 @@ class UserPlayer(Player):
                     this.pokemonList.append(Pokemon(pDict[selectedPokemon]['element'],selectedPokemon))
                     this.pokemonNames.append(selectedPokemon)
         
-        currentPokemon = pokemonList[menu.get_selection(strings=this.pokemonNames,title='')]
-        
-
     def attack(this, opponent):
-        pass
+        global menu
+        attacks = []
+        attackDict = this.currentPokemon.getAttacks()
+
+        for x in attackDict:
+            attacks.append(str(x) + ' Power: ' + attackDict[x]['power'] + 'Accuracy: ' + str(attackDict[x]['accuracy']))
+
+        selectedAttack = menu.get_selection(string=list(attacks),title='Choose attack to use!',show_exit_option=False)
 
     def switch(this):
-        pass
+        global menu
+
+        selectedIndex = menu.get_selection(strings=this.pokemonNames,title='Choose a Pokemon!',show_exit_option=False)
+
+        this.currentPokemon = this.pokemonList[selectedIndex] 
 
 
+print('Horray!')
