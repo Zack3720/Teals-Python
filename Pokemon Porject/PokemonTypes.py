@@ -29,7 +29,7 @@ pokemonDictionary = {
                 'AP' : 50,
             }
         },
-        'weak against' : 'fire'
+        'strong against' : ['water']
     },
     'fire' : {
         'attacks' : {
@@ -60,7 +60,7 @@ pokemonDictionary = {
                 'AP' : 60,
             }
         },
-        'weak against' : 'water'
+        'strong against' : ['grass']
     },
     'water' : {
         'attacks' : {
@@ -86,12 +86,12 @@ pokemonDictionary = {
                 'HP' : 70,
                 'AP' : 40,
             },
-            'Polyway' : {
+            'Polywag' : {
                 'HP' : 50,
                 'AP' : 50,
             }
         },
-        'weak against' : 'grass'
+        'strong against' : ['fire']
     }
 }
 
@@ -101,7 +101,7 @@ class Pokemon():
     maxHealth = None
     health = None
     attackPower = None
-    weakAgainst = None
+    strongAgainst = None
     isDead = False
 
     def __init__(this,pokemonElement,pokemonType):
@@ -119,7 +119,7 @@ class Pokemon():
         this.maxHealth = pokemonDictionary[pokemonElement]['types'][pokemonType]['HP']
         this.health = this.maxHealth
         this.attackPower = pokemonDictionary[pokemonElement]['types'][pokemonType]['AP']
-        this.weakAgainst = pokemonDictionary[pokemonElement]['weak against']
+        this.strongAgainst = pokemonDictionary[pokemonElement]['strong against']
 
     def attack(this, opponent, attack):
         try:
@@ -131,9 +131,9 @@ class Pokemon():
 
         if random.randint(0,100) < attackUsed['accuracy']:
             if this.attackPower > attackUsed['power']:
-                opponent.takeDamage(attackUsed['power'], this.pType)
+                opponent.takeDamage(attackUsed['power'], this.strongAgainst)
             else:
-                opponent.takeDamage(this.attackPower, this.pType)
+                opponent.takeDamage(this.attackPower, this.strongAgainst)
             return True
         else:
             return False
@@ -143,14 +143,14 @@ class Pokemon():
         if this.maxHealth < this.health:
             this.health = this.maxHealth
 
-    def takeDamage(this, damage, aType):
-            if this.weakAgainst == aType:
-                this.health -= damage * 1.5
-            else:
-                this.health -= damage
+    def takeDamage(this, damage, strongAgainst):
+        if (this.pElement in strongAgainst):
+            this.health -= damage * 1.5
+        else:
+            this.health -= damage
             
-            if this.health <= 0:
-                this.isDead = True
+        if this.health <= 0:
+            this.isDead = True
 
     def getElement(this):
         return this.pElement
