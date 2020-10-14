@@ -1,0 +1,117 @@
+{
+    "output": {
+        "width": 800,
+        "height": 600
+    },
+    "world": {
+        "color": {
+            "red": 0.529,
+            "green": 0.808,
+            "blue": 0.923
+        }
+    },
+    "camera": {
+        "field_of_view": 45
+    },
+    "shapes": [
+        {
+            "type": "plane",
+            "transform": {
+                "translate": {
+                    "x": 0.0,
+                    "y": -1.0,
+                    "z": 0.0
+                }
+            },
+            "material": {
+                "color": {
+                    "red": 0.8,
+                    "green": 0.8,
+                    "blue": 0.8
+                },
+                "ambient": 0.0,
+                "diffuse": 0.9,
+                "specular": 0.1,
+                "shininess": 10
+            }
+        },
+        {
+            "type": "sphere",
+            "transform": {
+                "translate": {
+                    "x": -1.0,
+                    "y": -0.5,
+                    "z": 6.0
+                }
+            },
+            "radius": 0.5,
+            "material": {
+                "color": {
+                    "red": 0.9,
+                    "green": 0.4,
+                    "blue": 0.3
+                },
+                "ambient": 0.1,
+                "diffuse": 0.3,
+                "specular": 0.6,
+                "shininess": 50
+            }
+        },
+        {
+            "type": "sphere",
+            "transform": {
+                "translate": {
+                    "x": 1.0,
+                    "y": 0.0,
+                    "z": 7.0
+                }
+            },
+            "radius": 1.0,
+            "material": {
+                "color": {
+                    "red": 0.1,
+                    "green": 1.0,
+                    "blue": 0.3
+                },
+                "ambient": 0.0,
+                "diffuse": 1.0,
+                "specular": 0.0,
+                "shininess": 0
+            }
+        }
+    ],
+    "lights": [
+        {
+            "type": "point",
+            "transform": {
+                "translate": {
+                    "x": 5.0,
+                    "y": 2.0,
+                    "z": -1.0
+                }
+            },
+            "color": {
+                "red": 0.8,
+                "green": 0.9,
+                "blue": 0.9
+            },
+            "intensity": 10.0
+        },
+        {
+            "type": "point",
+            "transform": {
+                "translate": {
+                    "x": -6.0,
+                    "y": 2.0,
+                    "z": 4.0
+                }
+            },
+            "color": {
+                "red": 1.0,
+                "green": 0.7,
+                "blue": 0.7
+            },
+            "intensity": 5.0
+        }
+    ]
+}
