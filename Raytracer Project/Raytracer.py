@@ -6,6 +6,7 @@ import os
 clear = lambda: os.system('cls')
 sceneDict = None
 sceneObjects = []
+sceneLights = []
 clear()
 with open('Teals-Python\Raytracer Project\scene.json') as f:
     sceneDict = json.load(f)
@@ -69,6 +70,11 @@ class Sphere():
         self.radius = radius
         self.color = color
 
+class Plane():
+
+    def __init__(self):
+        pass
+
 class Ray():
 
     def __init__(self, direction: Vector, point = None):
@@ -98,12 +104,15 @@ class Ray():
 def loadScene():
     global sceneDict
     global sceneObjects
+    global sceneLights
     for x in sceneDict['shapes']:
         if x['type'] == 'sphere':
             sceneObjects.append(Sphere(Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']),x['radius'],Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue'])))
         else:
             # Append plane here
             pass
+    for x in sceneDict['lights']:
+        sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue']), 'intensity' : x['intensity']})
 
 def drawImage(fov: int): 
     global sceneDict
