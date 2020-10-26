@@ -64,16 +64,23 @@ class Vector():
 
 class Sphere():
     
-    def __init__(self, center: Vector, radius: int, color: Vector):
+    def __init__(self, center: Vector, radius: int, color: Vector, ambient: float, diffuse: float):
 
+        if ambient > 1.0: 
+            ambient = 1.0
+        if diffuse > 1.0:
+            diffuse = 1.0
+        self.diffuse = diffuse
+        self.ambient = ambient
         self.center = center
         self.radius = radius
         self.color = color
 
 class Plane():
 
-    def __init__(self):
-        pass
+    def __init__(self, position, color):
+        self.center = position
+        self.color = color
 
 class Ray():
 
@@ -131,13 +138,18 @@ def drawImage(fov: int):
 
             for x in range(len(sceneObjects)):
                 intersect = r.intersects(sceneObjects[x])
+                p = Vector(0,0,0)
                 if (intersect.length() < closestIntersect or closestIntersect == -1) and intersect.z != -1:
                     closestIntersect = intersect.length()
                     objectIndex = x
+                    p = r.direction * intersect.length()
             if closestIntersect == -1:
                 temp.extend([int(sceneDict['world']['color']['red']*255),int(sceneDict['world']['color']['green']*255),int(sceneDict['world']['color']['blue']*255)])
             else:
-    
+                colors = []
+                for x in range(len(sceneLights)):
+                    lightRay = ray(sceneLights[x]['position'],p)
+                    normalFactor = Ray.dotProduct(lightRay.direction,)
                 color = sceneObjects[objectIndex].color
                 temp.append(int(color.x*255))
                 temp.append(int(color.y*255))
