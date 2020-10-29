@@ -8,7 +8,7 @@ sceneDict = None
 sceneObjects = []
 sceneLights = []
 clear()
-with open('Teals-Python\Raytracer Project\scene.json') as f:
+with open('Raytracer Project\scene.json') as f:
     sceneDict = json.load(f)
 
 
@@ -50,17 +50,17 @@ class Vector():
     def length(self, other = None):
         if other is None:
             other = Vector(0,0,0)
-        vsum = self + other
+        if not(type(other) == Vector):
+            raise TypeError('Unsupported type for vector length')
+        vsum = self - other
         return math.sqrt(Vector.dotProduct(vsum,vsum))
 
-    def normalize(self, other = None):
-        if other is None:
-            magnitude = self.length()
-        else:
-            magnitude = self.length(other)
-        self.x /= magnitude
-        self.y /= magnitude
-        self.z /= magnitude
+    def normalize(self):
+        magnitude = self.length()
+        x = (self.x)/magnitude
+        y = (self.y)/magnitude
+        z = (self.z)/magnitude
+        return Vector(x,y,z)
 
 class Sphere():
     
@@ -86,12 +86,12 @@ class Ray():
 
     def __init__(self, direction: Vector, point = None):
         if point is None:
-            direction.normalize()
+            normDirection = direction.normalize()
             point = Vector(0,0,0)
         else:
-            direction.normalize(point)
+            normDirection = (direction-point).normalize()
         
-        self.direction = direction
+        self.direction = normDirection
         self.endpoint = point
 
     def intersects(self,s: Sphere):
@@ -114,12 +114,12 @@ def loadScene():
     global sceneLights
     for x in sceneDict['shapes']:
         if x['type'] == 'sphere':
-            sceneObjects.append(Sphere(Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']),x['radius'],Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue'])))
+            sceneObjects.append(Sphere(Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']),x['radius'],Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue']),x['material']['ambient'],x['material']['diffuse']))
         else:
             # Append plane here
             pass
     for x in sceneDict['lights']:
-        sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue']), 'intensity' : x['intensity']})
+        sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['color']['red'],x['color']['green'],x['color']['blue']), 'intensity' : x['intensity']})
 
 def drawImage(fov: int): 
     global sceneDict
@@ -135,25 +135,51 @@ def drawImage(fov: int):
             r = Ray(Vector(int(j-(width/2)),int((height/2))-i,v))
             closestIntersect = -1
             objectIndex = 0
+            intersectPoint = Vector(0,0,0)
 
+            #Finds what(if any) objects that are intersected by ray r
             for x in range(len(sceneObjects)):
                 intersect = r.intersects(sceneObjects[x])
-                p = Vector(0,0,0)
                 if (intersect.length() < closestIntersect or closestIntersect == -1) and intersect.z != -1:
                     closestIntersect = intersect.length()
                     objectIndex = x
-                    p = r.direction * intersect.length()
+                    intersectPoint = r.direction * intersect.length()
+                    
+            
+            #Adds color to the list temp
             if closestIntersect == -1:
                 temp.extend([int(sceneDict['world']['color']['red']*255),int(sceneDict['world']['color']['green']*255),int(sceneDict['world']['color']['blue']*255)])
             else:
                 colors = []
                 for x in range(len(sceneLights)):
-                    lightRay = ray(sceneLights[x]['position'],p)
-                    normalFactor = Ray.dotProduct(lightRay.direction,)
-                color = sceneObjects[objectIndex].color
-                temp.append(int(color.x*255))
-                temp.append(int(color.y*255))
-                temp.append(int(color.z*255))
+                    lightRay = Ray(sceneLights[x]['position'],intersectPoint)
+                    objectPoint = lightRay.endpoint-sceneObjects[objectIndex].center
+                    objectPoint = objectPoint.normalize()
+                    normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
+                    intestFactor = 5
+                    #final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
+                    #colors.append(objectPoint)
+                    colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
+                
+                color = Vector(0,0,0)
+                for x in colors:
+                    color = color + x
+                color = color * 255
+                if color.x > 255:
+                    color.x = 255
+                elif color.x < 0:
+                    color.x = 0
+                if color.y > 255:
+                    color.y = 255
+                elif color.y < 0:
+                    color.y = 0
+                if color.z > 255:
+                    color.z = 255
+                elif color.z < 0:
+                    color.z = 0
+                temp.append(int(color.x))
+                temp.append(int(color.y))
+                temp.append(int(color.z))
         p.append(temp)
     f = open('output.png', 'wb')
     w = png.Writer(width, height, greyscale=False)
