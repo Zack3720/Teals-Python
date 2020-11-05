@@ -78,9 +78,15 @@ class Sphere():
 
 class Plane():
 
-    def __init__(self, position, color):
+    def __init__(self, position, color: Vector, ambient: float, diffuse: float):
+        if ambient > 1.0: 
+            ambient = 1.0
+        if diffuse > 1.0:
+            diffuse = 1.0
         self.center = position
         self.color = color
+        self.ambient = ambient
+        self.diffuse = diffuse
 
 class Ray():
 
@@ -94,30 +100,42 @@ class Ray():
         self.direction = normDirection
         self.endpoint = point
 
-    def intersects(self,s: Sphere):
-        a = (Vector.dotProduct(self.direction,(self.endpoint-s.center))**2)-(Vector.dotProduct((self.endpoint-s.center),(self.endpoint-s.center))-(s.radius**2))
-        if a < 0:
-            return Vector(0,0,-1)
-        a = math.sqrt(a)
-        b = -(Vector.dotProduct(self.direction,(self.endpoint-s.center)))
+    def intersects(self,intersecting_object):
+        if type(intersecting_object) is Sphere:
+            a = (Vector.dotProduct(self.direction * 2,(self.endpoint-intersecting_object.center))**2)-(Vector.dotProduct((self.endpoint-intersecting_object.center),(self.endpoint-intersecting_object.center))-(intersecting_object.radius**2)) * 4
+            if a < 0:
+                return Vector(0,0,-1)
+            a = math.sqrt(a)
+            a /= 2
+            b = -(Vector.dotProduct(self.direction,(self.endpoint-intersecting_object.center)))
 
-        if b-a > 0:
-            return self.direction*(b-a) + self.endpoint
-        elif b+a > 0:
-            return self.direction*(b+a) + self.endpoint
-        else:
-            return Vector(0,0,-1)
+            if b-a > 0:
+                return self.direction*(b-a) + self.endpoint
+            elif b+a > 0:
+                return self.direction*(b+a) + self.endpoint
+            else:
+                return Vector(0,0,-1)
+        elif type(intersecting_object) is Plane:
+            if self.direction.y == 0:
+                return Vector (0,0,-1)
+            
+            t_factor = intersecting_object.center.y / self.direction.y
+            if t_factor < 0:
+                return Vector(0,0,-1)
+            return self.direction * t_factor
+
 
 def loadScene():
     global sceneDict
     global sceneObjects
     global sceneLights
     for x in sceneDict['shapes']:
+        position = x['transform']['translate']
+        color = x['material']['color']
         if x['type'] == 'sphere':
-            sceneObjects.append(Sphere(Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']),x['radius'],Vector(x['material']['color']['red'],x['material']['color']['green'],x['material']['color']['blue']),x['material']['ambient'],x['material']['diffuse']))
-        else:
-            # Append plane here
-            pass
+            sceneObjects.append(Sphere(Vector(position['x'],position['y'],position['z']),x['radius'],Vector(color['red'],color['green'],color['blue']),x['material']['ambient'],x['material']['diffuse']))
+        elif x['type'] == 'plane':
+            sceneObjects.append(Plane(Vector(position['x'],position['y'],position['z']),Vector(color['red'],color['green'],color['blue']),x['material']['ambient'],x['material']['diffuse']))
     for x in sceneDict['lights']:
         sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['color']['red'],x['color']['green'],x['color']['blue']), 'intensity' : x['intensity']})
 
@@ -140,27 +158,39 @@ def drawImage(fov: int):
             #Finds what(if any) objects that are intersected by ray r
             for x in range(len(sceneObjects)):
                 intersect = r.intersects(sceneObjects[x])
-                if (intersect.length() < closestIntersect or closestIntersect == -1) and intersect.z != -1:
+                if (intersect.length() < closestIntersect or closestIntersect == -1) and intersect.z > 0:
                     closestIntersect = intersect.length()
                     objectIndex = x
                     intersectPoint = r.direction * intersect.length()
                     
-            
             #Adds color to the list temp
             if closestIntersect == -1:
                 temp.extend([int(sceneDict['world']['color']['red']*255),int(sceneDict['world']['color']['green']*255),int(sceneDict['world']['color']['blue']*255)])
             else:
                 colors = []
+                in_shadow = False
                 for x in range(len(sceneLights)):
                     lightRay = Ray(sceneLights[x]['position'],intersectPoint)
-                    objectPoint = lightRay.endpoint-sceneObjects[objectIndex].center
-                    objectPoint = objectPoint.normalize()
-                    normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
-                    intestFactor = 5
-                    #final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
-                    #colors.append(objectPoint)
-                    colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
-                
+                    for y in range(len(sceneObjects)):
+                        if y == objectIndex:
+                            continue
+                        if type(sceneObjects[y]) is Plane:
+                            continue
+                        light_intersect = lightRay.intersects(sceneObjects[y])
+                        if light_intersect.z != -1:
+                            in_shadow = True
+                    if not(in_shadow):
+                        if type(sceneObjects[objectIndex]) is Sphere:
+                            objectPoint = lightRay.endpoint-sceneObjects[objectIndex].center
+                        elif type(sceneObjects[objectIndex]) is Plane:
+                            objectPoint = Vector( 0, -sceneObjects[objectIndex].center.y, 0)
+                        objectPoint = objectPoint.normalize()
+                        normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
+                        intestFactor = 6
+                        #final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
+                        #colors.append(objectPoint)
+                        colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
+                    
                 color = Vector(0,0,0)
                 for x in colors:
                     color = color + x
