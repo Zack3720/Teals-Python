@@ -7,6 +7,7 @@ clear = lambda: os.system('cls')
 sceneDict = None
 sceneObjects = []
 sceneLights = []
+FOV = 0
 clear()
 with open('Raytracer Project\scene.json') as f:
     sceneDict = json.load(f)
@@ -139,24 +140,37 @@ def loadScene():
     for x in sceneDict['lights']:
         sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['color']['red'],x['color']['green'],x['color']['blue']), 'intensity' : x['intensity']})
 
-def drawImage(fov: int): 
+def drawImage(): 
     global sceneDict
     global sceneObjects
+    global FOV
+    FOV = sceneDict['camera']['field_of_view']
     width = sceneDict['output']['width']
     height = sceneDict['output']['height']
-    p = []
-    v = int((width/2)/math.tan((fov*math.pi/180)/2))
+    pixels = []
+
+    # Finding distance from camera the ray will be at.
+    v = int((width/2)/math.tan((FOV*math.pi/180)/2))
 
     for i in range(height):
         temp = []
         for j in range(width):
+
+            # Constructs ray R using the points (j-w/2,h/2-i,v)
             r = Ray(Vector(int(j-(width/2)),int((height/2))-i,v))
+
+            # Constructs ClosestIntersect and assigns a value of -1, which would be behind the camera.
             closestIntersect = -1
+
+            # Will be the index of the object that was intersected.
             objectIndex = 0
+
+            # Blank vector to be set to point of intersection.
             intersectPoint = Vector(0,0,0)
 
             #Finds what(if any) objects that are intersected by ray r
             for x in range(len(sceneObjects)):
+                #
                 intersect = r.intersects(sceneObjects[x])
                 if (intersect.length() < closestIntersect or closestIntersect == -1) and intersect.z > 0:
                     closestIntersect = intersect.length()
@@ -165,32 +179,86 @@ def drawImage(fov: int):
                     
             #Adds color to the list temp
             if closestIntersect == -1:
+                # If no objects were intersected
                 temp.extend([int(sceneDict['world']['color']['red']*255),int(sceneDict['world']['color']['green']*255),int(sceneDict['world']['color']['blue']*255)])
             else:
+
+                # Empty list that will be vectors that correspond to color
+                # Each color will be summed up to a final color
                 colors = []
+
+                # Boolean if for a specific light, if the point is in a shadow.
                 in_shadow = False
+
+                # For loop for every light in the scene
+                # In here it will be tested if for each light, a point is in a shadow
+                # and if not it will determind one of the colors of the current pixel.
                 for x in range(len(sceneLights)):
+                    
+                    # Constructs ray that starts at intersectPoint from before, 
+                    # and goes toward the position of the current light
                     lightRay = Ray(sceneLights[x]['position'],intersectPoint)
+
+                    # For loop for every Object in the scene
+                    # In here it will be determind if the pixel is in a shadow for each object.
                     for y in range(len(sceneObjects)):
+
+                        # This will skip this object if it is the object that was intersected with the camera ray.
+                        # This is because an object can't cast a shadow onto its self.
                         if y == objectIndex:
                             continue
+
+                        # This will skip the object if it is a Plane
+                        # While this also means Planes now can't have shadows
+                        # Since in the scene Planes never had a shadow that was visable.
+                        # This probably should be changed so that if a new Plane was added it could have a shadow.
                         if type(sceneObjects[y]) is Plane:
                             continue
+                        
+                        # Constructs light_intersect and sets it to the point at which lightRay
+                        # and the current object intersect if they even do.
                         light_intersect = lightRay.intersects(sceneObjects[y])
+
+                        # Test if there was an intersection for this object.
                         if light_intersect.z != -1:
+                            
+                            # If so makes in_shadow true 
                             in_shadow = True
-                    if not(in_shadow):
-                        if type(sceneObjects[objectIndex]) is Sphere:
-                            objectPoint = lightRay.endpoint-sceneObjects[objectIndex].center
-                        elif type(sceneObjects[objectIndex]) is Plane:
-                            objectPoint = Vector( 0, -sceneObjects[objectIndex].center.y, 0)
-                        objectPoint = objectPoint.normalize()
-                        normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
-                        intestFactor = 6
-                        #final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
-                        #colors.append(objectPoint)
-                        colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
+
+                            # breaks since there is no point in testing if more objects 
+                            # cast a shadow on this point since it won't change anything.
+                            break
                     
+                    # If the point was not in a shadow, the color will be determinded
+                    if not(in_shadow):
+                        # Constructs objectPoint for if the point is on a sphere or plane.
+                        if type(sceneObjects[objectIndex]) is Sphere:
+
+                            # This vector is pointed in the direction from 
+                            # the center of a sphere to point intersected.
+                            objectPoint = lightRay.endpoint-sceneObjects[objectIndex].center
+
+                        elif type(sceneObjects[objectIndex]) is Plane:
+
+                            # This vector is pointed in the direction 
+                            # opposite of a plane which can only be horizonatal.
+                            objectPoint = Vector( 0, -sceneObjects[objectIndex].center.y, 0)
+
+                        # Normalize objectPoint
+                        objectPoint = objectPoint.normalize()
+                        
+                        # Makes the Normal factor by comparing how simular(parellel) the light ray
+                        # intersecting the object is to the direction, which way the point was 'facing', of the object
+                        normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
+
+                        # Added factor that brightens up the scene since the scene was very dim.
+                        intestFactor = 6
+
+                        # Calculates one of the colors for this point.
+                        # Lots of math here, its works so not going to change much about it.
+                        colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
+                        # final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
+                
                 color = Vector(0,0,0)
                 for x in colors:
                     color = color + x
@@ -207,18 +275,20 @@ def drawImage(fov: int):
                     color.z = 255
                 elif color.z < 0:
                     color.z = 0
+
+                # Appends the values of the color vector to the temp list
                 temp.append(int(color.x))
                 temp.append(int(color.y))
                 temp.append(int(color.z))
-        p.append(temp)
-    f = open('output.png', 'wb')
+        pixels.append(temp)
+    output_file = open('output.png', 'wb')
     w = png.Writer(width, height, greyscale=False)
-    w.write(f, p)
-    f.close()
+    w.write(f, pixels)
+    output_file.close()
     print('done!')
 
 loadScene()
-drawImage(45)
+drawImage()
             
 
 
