@@ -4,7 +4,7 @@ import math
 import os
 
 clear = lambda: os.system('cls')
-dataset = datasets.load_boston()
+dataset = datasets.load_breast_cancer()
 
 targets = dataset['target']
 data = dataset['data']
@@ -40,7 +40,7 @@ def main():
         sum_of_errors = error**2
 
     print('Average Error:')
-    print(math.sqrt(sum_of_errors/506))
+    print(math.sqrt(sum_of_errors/len(data)))
     print('\nSmallest Error and it\'s index')
     print(smallest_error)
     print('\nLargest Error and it\'s index')
