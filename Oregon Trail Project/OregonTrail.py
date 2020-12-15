@@ -110,29 +110,29 @@ def passDays(d):
 
 def readChat():
     global helpTyped
-    if not helpTyped: 
-        print('Type \'help\' for a list of commands')
-    helpTyped = False
-    a = input('What do you wish to do? \n')
-    args = a.split(' ')
-    args[0] = args[0].lower()
-    clear()
-    if args[0] == "quit":
-        sys.exit() 
-    elif args[0] == 'help':
-        help()
-        helpTyped = True
-    elif args[0] == 'status':
-        status()
-    elif args[0] == 'travel':
-        travel()
-    elif args[0] == 'rest':
-        rest()
-    elif args[0] == 'hunt':
-        hunt()
-    else:
-        print('Thats not a valid command! \n')
-    readChat()
+    while True:
+        if not helpTyped: 
+            print('Type \'help\' for a list of commands')
+        helpTyped = False
+        a = input('What do you wish to do? \n')
+        args = a.split(' ')
+        args[0] = args[0].lower()
+        clear()
+        if args[0] == "quit":
+            sys.exit() 
+        elif args[0] == 'help':
+            help()
+            helpTyped = True
+        elif args[0] == 'status':
+            status()
+        elif args[0] == 'travel':
+            travel()
+        elif args[0] == 'rest':
+            rest()
+        elif args[0] == 'hunt':
+            hunt()
+        else:
+            print('Thats not a valid command! \n')
 
 def main():
     clear()

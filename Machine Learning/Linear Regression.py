@@ -4,7 +4,7 @@ import math
 import os
 
 clear = lambda: os.system('cls')
-dataset = datasets.load_breast_cancer()
+dataset = datasets.load_boston()
 
 targets = dataset['target']
 data = dataset['data']
@@ -13,10 +13,8 @@ data = np.hstack([data,bias])
 weights = None
 
 
-def find_Guess (inputs):
-    global weights
-    inputs = inputs * weights
-    return inputs.sum()
+def find_Guess (inputs,weights):
+    return np.dot(inputs,weights)
 
 def find_Weights(data,targets):
     weights = (np.linalg.inv(np.transpose(data).dot(data))).dot(np.transpose(data).dot(targets))
@@ -25,7 +23,7 @@ def find_Weights(data,targets):
 def main():
     clear()
     global weights
-    np. set_printoptions(suppress=True)
+    np.set_printoptions(suppress=True)
     weights = find_Weights(data,targets)
     sum_of_errors = 0
     largest_error = [0,-1]
@@ -37,7 +35,7 @@ def main():
             largest_error = [error,x]
         if abs(error) < abs(smallest_error[0]):
             smallest_error = [error,x]
-        sum_of_errors = error**2
+        sum_of_errors += error**2
 
     print('Average Error:')
     print(math.sqrt(sum_of_errors/len(data)))
