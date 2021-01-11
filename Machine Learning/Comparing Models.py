@@ -1,6 +1,11 @@
 from sklearn import datasets
-from Logistic import makeModel
+from Logistic import makeModelLogistic
+from Linear import makeModelLinear
+import os
+
+clear = lambda: os.system('cls')
+clear()
 
 dataset = datasets.load_breast_cancer()
 
-makeModel(dataset['target'],dataset['data'])
+makeModelLogistic(dataset['target'],dataset['data'])
