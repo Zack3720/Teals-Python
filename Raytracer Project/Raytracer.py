@@ -4,14 +4,13 @@ import png
 import os
 
 clear = lambda: os.system('cls')
-sceneDict = None
-sceneObjects = []
-sceneLights = []
-FOV = 0
 clear()
-with open('Raytracer Project\scene.json') as f:
-    sceneDict = json.load(f)
 
+def parse_vector(dict):
+    return Vector(dict['x'], dict['y'], dict['z'])
+
+def parse_color(dict):
+    return Vector(dict['red'], dict['green'], dict['blue'])
 
 class Vector():
     x = None
@@ -126,24 +125,36 @@ class Ray():
             return self.direction * t_factor
 
 
-def loadScene():
-    global sceneDict
-    global sceneObjects
-    global sceneLights
-    for x in sceneDict['shapes']:
-        position = x['transform']['translate']
-        color = x['material']['color']
-        if x['type'] == 'sphere':
-            sceneObjects.append(Sphere(Vector(position['x'],position['y'],position['z']),x['radius'],Vector(color['red'],color['green'],color['blue']),x['material']['ambient'],x['material']['diffuse']))
-        elif x['type'] == 'plane':
-            sceneObjects.append(Plane(Vector(position['x'],position['y'],position['z']),Vector(color['red'],color['green'],color['blue']),x['material']['ambient'],x['material']['diffuse']))
-    for x in sceneDict['lights']:
-        sceneLights.append({'position' : Vector(x['transform']['translate']['x'],x['transform']['translate']['y'],x['transform']['translate']['z']), 'color' : Vector(x['color']['red'],x['color']['green'],x['color']['blue']), 'intensity' : x['intensity']})
+def drawImage(sceneFile):
 
-def drawImage(): 
-    global sceneDict
-    global sceneObjects
-    global FOV
+    sceneDict = None
+    sceneObjects = []
+    sceneLights = []
+
+    with open(sceneFile) as f:
+        sceneDict = json.load(f)
+    for shapeDict in sceneDict['shapes']:
+        position = shapeDict['transform']['translate']
+        color = shapeDict['material']['color']
+        if shapeDict['type'] == 'sphere':
+            sceneObjects.append(Sphere(
+                parse_vector(position),
+                shapeDict['radius'],
+                parse_color(color),
+                shapeDict['material']['ambient'],
+                shapeDict['material']['diffuse']))
+        elif shapeDict['type'] == 'plane':
+            sceneObjects.append(Plane(
+                parse_vector(position),
+                parse_color(color),
+                shapeDict['material']['ambient'],
+                shapeDict['material']['diffuse']))
+    for lightDict in sceneDict['lights']:
+        sceneLights.append({
+            'position' : parse_vector(lightDict['transform']['translate']),
+            'color' : parse_color(lightDict['color']),
+            'intensity' : lightDict['intensity']})
+
     FOV = sceneDict['camera']['field_of_view']
     width = sceneDict['output']['width']
     height = sceneDict['output']['height']
@@ -152,8 +163,11 @@ def drawImage():
     # Finding distance from camera the ray will be at.
     v = int((width/2)/math.tan((FOV*math.pi/180)/2))
 
+    #Loops through every vertical row of the image
     for i in range(height):
+        #Stores the imformation for each pixel in a given row
         temp = []
+        #Loops through every pixel in current vertical row
         for j in range(width):
 
             # Constructs ray R using the points (j-w/2,h/2-i,v)
@@ -251,44 +265,27 @@ def drawImage():
                         # intersecting the object is to the direction, which way the point was 'facing', of the object
                         normalFactor = Vector.dotProduct(lightRay.direction,objectPoint)
 
-                        # Added factor that brightens up the scene since the scene was very dim.
-                        intestFactor = 6
-
                         # Calculates one of the colors for this point.
                         # Lots of math here, its works so not going to change much about it.
-                        colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * intestFactor * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])**2) ))))
+                        colors.append(sceneObjects[objectIndex].color * sceneObjects[objectIndex].ambient + (sceneObjects[objectIndex].color * sceneLights[x]['color'] * sceneLights[x]['intensity'] * normalFactor * sceneObjects[objectIndex].diffuse * ( 1 / ((intersectPoint.length(sceneLights[x]['position'])) ))))
                         # final_color = ambient * shape_color + diffuse * normal_factor * light_color * intensity * shape_color * (1 / distance^2)
                 
                 color = Vector(0,0,0)
                 for x in colors:
                     color = color + x
                 color = color * 255
-                if color.x > 255:
-                    color.x = 255
-                elif color.x < 0:
-                    color.x = 0
-                if color.y > 255:
-                    color.y = 255
-                elif color.y < 0:
-                    color.y = 0
-                if color.z > 255:
-                    color.z = 255
-                elif color.z < 0:
-                    color.z = 0
-
                 # Appends the values of the color vector to the temp list
-                temp.append(int(color.x))
-                temp.append(int(color.y))
-                temp.append(int(color.z))
+                temp.append(max(0,min(255,int(color.x))))
+                temp.append(max(0,min(255,int(color.y))))
+                temp.append(max(0,min(255,int(color.z))))
         pixels.append(temp)
     output_file = open('output.png', 'wb')
     w = png.Writer(width, height, greyscale=False)
-    w.write(f, pixels)
+    w.write(output_file, pixels)
     output_file.close()
     print('done!')
 
-loadScene()
-drawImage()
+drawImage('Raytracer Project\scene.json')
             
 
 
