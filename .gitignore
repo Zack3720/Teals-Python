@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+randomCoin.py
+.vscode/settings.json
+output.png

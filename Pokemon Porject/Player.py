@@ -10,78 +10,78 @@ menu = SelectionMenu([''])
 
 class Player(ABC):
 
-    def __init__(this):
+    def __init__(self):
         super.__init__
 
 
     @abstractmethod
-    def takeTurn(this):
+    def takeTurn(self):
         pass
 
     @abstractmethod
-    def askPokemon(this):
+    def askPokemon(self):
         pass
 
     @abstractmethod
-    def attack(this):
+    def attack(self):
         pass
     
-    def heal(this):
-        this.currentPokemon.heal()
+    def heal(self):
+        self.currentPokemon.heal()
 
     @abstractmethod
-    def switch(this):
+    def switch(self):
         pass
 
-    def getCurrentPokemon(this):
-        return this.currentPokemon
+    def getCurrentPokemon(self):
+        return self.currentPokemon
 
-    def getPokemonList(this):
-        return this.pokemonList
+    def getPokemonList(self):
+        return self.pokemonList
 
-    def isDefeated(this):
-        if len(this.pokemonList) == 0:
+    def isDefeated(self):
+        if len(self.pokemonList) == 0:
             return True
         else:
             return False
 
 class CompPlayer(Player):
 
-    def __init__(this):
+    def __init__(self):
         super.__init__
-        this.pokemonList = []
-        this.currentPokemon = None
-        this.hasPokemon = False
+        self.pokemonList = []
+        self.currentPokemon = None
+        self.hasPokemon = False
     
-    def takeTurn(this,opponent: Pokemon):
-        if not(this.hasPokemon):
+    def takeTurn(self,opponent: Pokemon):
+        if not(self.hasPokemon):
             raise ValueError('Player has no Pokemon!')
         global menu
 
-        if this.currentPokemon.getIsDead():
-            this.pokemonList.pop(this.pokemonList.index(this.currentPokemon))
-            if not(this.isDefeated()):
-                this.switch()
+        if self.currentPokemon.getIsDead():
+            self.pokemonList.pop(self.pokemonList.index(self.currentPokemon))
+            if not(self.isDefeated()):
+                self.switch()
             return
 
 
         if random.randint(0,2) <= 1:
             action = 0
-        elif random.randint(0,1) == 1 or len(this.pokemonList) < 1:
+        elif random.randint(0,1) == 1 or len(self.pokemonList) < 1:
             action = 1
         else:
             action = 2
 
         if action == 0:
             menu.get_selection(['Ok'],title='Your opponent chooses to attack!',show_exit_option=False)
-            this.attack(opponent)
+            self.attack(opponent)
         elif action == 1:
             menu.get_selection(['Ok'],title='Your opponent chooses to heal!',show_exit_option=False)
-            this.heal()
+            self.heal()
         elif action == 2:
-            this.switch()
+            self.switch()
 
-    def askPokemon(this, pokemonAmount,takenPokemon = []):
+    def askPokemon(self, pokemonAmount,takenPokemon = []):
 
         # Makes a nested dictionary 'pDict' that list all pokemon types
         # And adds their elements to their dictionary.
@@ -102,21 +102,20 @@ class CompPlayer(Player):
         for x in range(pokemonAmount):
             if len(pDict) == 0:
                 break
-            pokemonSelected = False
             selectedPokemon = list(pDict)[random.randint(0,len(pDict)-1)]
-            this.pokemonList.append(Pokemon(pDict[selectedPokemon]['element'],selectedPokemon))
+            self.pokemonList.append(Pokemon(pDict[selectedPokemon]['element'],selectedPokemon))
             pDict.pop(selectedPokemon)
-        this.hasPokemon = True
-        this.switch(False)
+        self.hasPokemon = True
+        self.switch(False)
 
-    def attack(this, opponent: Pokemon):
+    def attack(self, opponent: Pokemon):
         global menu
-        attackDict = this.currentPokemon.getAttacks()
+        attackDict = self.currentPokemon.getAttacks()
 
 
         selectedAttack = random.randint(0,len(attackDict)-1)
         attack = list(attackDict)[selectedAttack]
-        if this.currentPokemon.attack(opponent,attack):
+        if self.currentPokemon.attack(opponent,attack):
             if opponent.getIsDead():
                 menu.get_selection(['Ok'],title='Your opponent killed your '+opponent.getType()+'!',show_exit_option=False)
             else:
@@ -124,37 +123,37 @@ class CompPlayer(Player):
         else:
             menu.get_selection(['Ok'],title='Their attack missed!',show_exit_option=False)
 
-    def switch(this,displayMessage = True):
-        selectedIndex = random.randint(0,len(this.pokemonList)-1)
+    def switch(self,displayMessage = True):
+        selectedIndex = random.randint(0,len(self.pokemonList)-1)
 
-        this.currentPokemon = this.pokemonList[selectedIndex] 
+        self.currentPokemon = self.pokemonList[selectedIndex] 
         if displayMessage:
-            menu.get_selection(['Ok'],title='Your opponent switch to '+this.pokemonList[selectedIndex].getType()+'!',show_exit_option=False)
+            menu.get_selection(['Ok'],title='Your opponent switch to '+self.pokemonList[selectedIndex].getType()+'!',show_exit_option=False)
 
 class UserPlayer(Player):
     pokemonNames = []
     
-    def __init__(this):
+    def __init__(self):
         super.__init__
-        this.pokemonList = []
-        this.currentPokemon = None
-        this.hasPokemon = False
+        self.pokemonList = []
+        self.currentPokemon = None
+        self.hasPokemon = False
 
-    def takeTurn(this,opponent: Pokemon):
-        if not(this.hasPokemon):
+    def takeTurn(self,opponent: Pokemon):
+        if not(self.hasPokemon):
             raise ValueError('Player has no Pokemon!')
 
         global menu
-        if this.currentPokemon.getIsDead():
-            this.pokemonList.pop(this.pokemonList.index(this.currentPokemon))
-            this.pokemonNames.pop(this.pokemonNames.index(this.currentPokemon.getType()))
-            if not(this.isDefeated()):
-                this.switch()
+        if self.currentPokemon.getIsDead():
+            self.pokemonList.pop(self.pokemonList.index(self.currentPokemon))
+            self.pokemonNames.pop(self.pokemonNames.index(self.currentPokemon.getType()))
+            if not(self.isDefeated()):
+                self.switch()
             return
         
         choosenAction = False
         while not(choosenAction):
-            if len(this.pokemonList) > 1:
+            if len(self.pokemonList) > 1:
                 action = menu.get_selection(['Attack','Heal','Switch','Your Pokemon\'s Stats'], title='Choose Action!',subtitle=('Opponent: ' + opponent.getType() + ' HP: ' + str(opponent.getHealth())), show_exit_option=False)
             else:
                 action = menu.get_selection(['Attack','Heal','Your Pokemon\'s Stats'], title='Choose Action!',subtitle=('Opponent: ' + opponent.getType() + ' HP: ' + str(opponent.getHealth())), show_exit_option=False)
@@ -162,21 +161,21 @@ class UserPlayer(Player):
                     action += 1
             if action == 3:
                 pString = ''
-                for p in this.pokemonNames:
+                for p in self.pokemonNames:
                     pString = pString + ' ' + p
-                menu.get_selection(['Ok'],subtitle='Your Current Pokemon: '+this.currentPokemon.getType()+' HP: '+str(this.currentPokemon.getHealth())+' Element: '+this.currentPokemon.getElement(),title='List of Your Pokemon: '+pString,show_exit_option=False)
+                menu.get_selection(['Ok'],subtitle='Your Current Pokemon: '+self.currentPokemon.getType()+' HP: '+str(self.currentPokemon.getHealth())+' Element: '+self.currentPokemon.getElement(),title='List of Your Pokemon: '+pString,show_exit_option=False)
             else:
                 choosenAction = True
         
         if action == 0:
-            this.attack(opponent)
+            self.attack(opponent)
         elif action == 1:
-            this.heal()
-            menu.get_selection(['Ok'],title='You have healed you '+this.currentPokemon.getType()+'!',show_exit_option=False)
+            self.heal()
+            menu.get_selection(['Ok'],title='You have healed you '+self.currentPokemon.getType()+'!',show_exit_option=False)
         elif action == 2:
-            this.switch()
+            self.switch()
 
-    def askPokemon(this, pokemonAmount,takenPokemon = []):
+    def askPokemon(self, pokemonAmount,takenPokemon = []):
         global menu 
 
         # Makes a nested dictionary 'pDict' that list all pokemon types
@@ -204,23 +203,23 @@ class UserPlayer(Player):
                 selectedPokemon = list(pDict)[selectedIndex]
                 if not(bool(menu.get_selection(strings=['Choose','Back'],title=selectedPokemon,subtitle=('AP: ' + str(pDict[selectedPokemon]['AP']) + '  HP: ' + str(pDict[selectedPokemon]['HP']) + '  Element: ' + pDict[selectedPokemon]['element']),show_exit_option=False))):
                     pokemonSelected = True
-                    this.pokemonList.append(Pokemon(pDict[selectedPokemon]['element'],selectedPokemon))
-                    this.pokemonNames.append(selectedPokemon)
+                    self.pokemonList.append(Pokemon(pDict[selectedPokemon]['element'],selectedPokemon))
+                    self.pokemonNames.append(selectedPokemon)
                     pDict.pop(selectedPokemon)
-        this.hasPokemon = True
-        this.switch()
+        self.hasPokemon = True
+        self.switch()
         
-    def attack(this, opponent: Pokemon):
+    def attack(self, opponent: Pokemon):
         global menu
         attacks = []
-        attackDict = this.currentPokemon.getAttacks()
+        attackDict = self.currentPokemon.getAttacks()
 
         for x in attackDict:
             attacks.append(str(x) + ' Power: ' + str(attackDict[x]['power']) + ' Accuracy: ' + str(attackDict[x]['accuracy']))
 
         selectedAttack = menu.get_selection(strings=list(attacks),title='Choose attack to use!',show_exit_option=False)
         attack = list(attackDict)[selectedAttack]
-        if this.currentPokemon.attack(opponent,attack):
+        if self.currentPokemon.attack(opponent,attack):
             if opponent.getIsDead():
                 menu.get_selection(['Ok'],title='You have killed your opponent\'s '+opponent.getType()+'!',show_exit_option=False)
             else:
@@ -228,12 +227,12 @@ class UserPlayer(Player):
         else:
             menu.get_selection(['Ok'],title='Your attack missed!',show_exit_option=False)
 
-    def switch(this):
+    def switch(self):
         global menu
 
-        selectedIndex = menu.get_selection(strings=this.pokemonNames,title='Choose a Pokemon!',show_exit_option=False)
+        selectedIndex = menu.get_selection(strings=self.pokemonNames,title='Choose a Pokemon!',show_exit_option=False)
 
-        this.currentPokemon = this.pokemonList[selectedIndex]
+        self.currentPokemon = self.pokemonList[selectedIndex]
 
-    def getNames(this):
-        return this.pokemonNames 
+    def getNames(self):
+        return self.pokemonNames 

@@ -22,17 +22,11 @@ def makeModelLogistic (targets,inputs):
                 previous_error_average = current_error_average
                 previous_error_min = current_error_min
             elif (previous_error_average < current_error_average) and (previous_error_min < current_error_min):
-                print (errorList[len(errorList)-1])
-                print(previous_error_min)
-                return previous_error_min
+                return weights
             else:
                 previous_error_average = current_error_average
                 previous_error_min = current_error_min
             errorList = []
-            
-            
-
-    return weights
 
 def make_Prediction (inputs,weights):
     results = inputs @ weights

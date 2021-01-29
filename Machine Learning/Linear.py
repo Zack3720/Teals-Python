@@ -4,29 +4,28 @@ import math
 def find_Guess (inputs,weights):
     return np.dot(inputs,weights)
 
-def find_Weights(data,targets):
-    weights = (np.linalg.inv(np.transpose(data).dot(data))).dot(np.transpose(data).dot(targets))
+def find_Weights(inputs,targets):
+    weights = (np.linalg.inv(np.transpose(inputs).dot(inputs))).dot(np.transpose(inputs).dot(targets))
     return weights
 
 def makeModelLinear (targets,inputs):
-    data = None
-    data = np.hstack([inputs,np.ones([len(data),1])])
-    weights = find_Weights(data,targets)
+    inputs = np.hstack([inputs,np.ones([len(inputs),1])])
+    weights = find_Weights(inputs,targets)
     errorList = []
 
-    for x in range(len(data)):
-        guess = find_Guess(data[x],weights)
+    for x in range(len(inputs)):
+        guess = find_Guess(inputs[x],weights)
         errorList.append(targets[x] - guess)
     
-    return np.amin(errorList)
+    return weights
         
     
 
     #sum_of_errors = 0
     #largest_error = [0,-1]
     #smallest_error = [1000,-1]
-    #for x in range(len(data)):
-    #    guess = find_Guess(data[x],weights)
+    #for x in range(len(inputs)):
+    #    guess = find_Guess(inputs[x],weights)
     #    error = targets[x] - guess
     #    if abs(error) > abs(largest_error[0]):
     #        largest_error = [error,x]
@@ -35,7 +34,7 @@ def makeModelLinear (targets,inputs):
     #    sum_of_errors += error**2
     #
     #print('Average Error:')
-    #print(math.sqrt(sum_of_errors/len(data)))
+    #print(math.sqrt(sum_of_errors/len(inputs)))
     #print('\nSmallest Error and it\'s index')
     #print(smallest_error)
     #print('\nLargest Error and it\'s index')
@@ -44,6 +43,6 @@ def makeModelLinear (targets,inputs):
     #print(weights)
     #print('The last one is the bias')
     #print('\nFeature Names')
-    #print(dataset['feature_names'])
+    #print(inputsset['feature_names'])
     
 
