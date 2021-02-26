@@ -49,7 +49,7 @@ def define_model():
 # run the test harness for evaluating a model
 def run_test_harness():
 	# load dataset
-	trainX, trainY, testX, testY = load_dataset()
+	trainX, trainY, testX, _ = load_dataset()
 	# prepare pixel data
 	trainX, testX = prep_pixels(trainX, testX)
 	# define model
